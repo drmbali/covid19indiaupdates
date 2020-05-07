@@ -6,4 +6,4 @@ gunicorn
 html5lib
 datetime
 fuzzywuzzy
-
+xlrd >= 1.0.0
