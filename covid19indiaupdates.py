@@ -20,7 +20,7 @@ from flask import Flask,jsonify
 
 def zoneData():
     #https://api.covid19india.org/zones.json
-    global zonesPanda
+    #global zonesPanda
     damnationZones=requests.get("https://api.covid19india.org/zones.json")
     districtzones=damnationZones.json()
     zonesD=districtzones.get('zones')
@@ -50,7 +50,7 @@ def zoneData():
     zonesPanda['lat']=Zlat
 
 def matcher_final(pdat_i,pdats_i,district=True):
-    global zonesPanda
+    #global zonesPanda
     key=999999999
     city=False
     for j in range(len(zonesPanda)):
@@ -66,9 +66,8 @@ def matcher_final(pdat_i,pdats_i,district=True):
         return(0,0)
 
 def jsonWriter(dist,state,conf,act,rec,dead,coor,zone):
-    global stateCounter,india_totalCases,india_activecases,india_recovered,india_deaths
+    #global stateCounter,india_totalCases,india_activecases,india_recovered,india_deaths
     if(coor):
-        
         g={}
         g['type']="Point"
         g['coordinates']=coor
@@ -99,7 +98,7 @@ def jsonWriter(dist,state,conf,act,rec,dead,coor,zone):
 
 
 def matcher_detailed(pdat_i,pdats_i,district=True):
-    global latLong
+    #global latLong
     key=999999999
     city=False
     for j in range(len(latLong)):
@@ -201,13 +200,13 @@ def updates():
 
 
 if __name__=="__main__":
-    zonesPanda=pd.DataFrame()
-    latLong=pd.read_excel('latlonginMainupd.xlsx')
-    stateCounter={}
-    india_totalCases=0
-    india_activecases=0
-    india_recoveres=0
-    india_deaths=0
+    global zonesPanda=pd.DataFrame()
+    global latLong=pd.read_excel('latlonginMainupd.xlsx')
+    global stateCounter={}
+    global india_totalCases=0
+    global india_activecases=0
+    global india_recoveres=0
+    global india_deaths=0
     app.run()
 
 
