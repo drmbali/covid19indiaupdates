@@ -122,14 +122,14 @@ def matcher_detailed(pdat_i,pdats_i,district=True):
         return 0
 
 def mainer():
-    #latLong=pd.read_excel('latlonginMainupd.xlsx')
+    latLong=pd.read_excel('latlonginMainupd.xlsx')
     #print(datetime.datetime.now())
    
     india_totalCases = 0
     india_activecases = 0
     india_recovered= 0
     india_deaths= 0
-    #zonesPanda=pd.DataFrame()
+    zonesPanda=pd.DataFrame()
     zoneData()
     daataa=[]
     stateCounter={}
