@@ -5,6 +5,5 @@ flask
 gunicorn
 html5lib
 datetime
-collections
 fuzzywuzzy
-time
+
