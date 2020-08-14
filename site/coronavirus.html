@@ -1,0 +1,768 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<html>
+<head>
+  <title>covid19 india alerts: Coronavirus cases near you</title>
+  <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.2.0/mapbox-gl-geocoder.min.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.2.0/mapbox-gl-geocoder.css' type='text/css' />
+      <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+      <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet'/>
+<style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+.quakeInfo {
+  position: absolute;
+  font-family: sans-serif;
+  margin-top: 5px;
+  margin-left: 5px;
+  padding: 5px;
+  width: 27%;
+  border: 2px solid black;
+  font-size: 14px;
+  color: #060000;
+  background-color: #666565;
+  border-radius: 3px;
+  z-index: 99;
+}
+.mapper{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.infobar{
+  display: none;
+  position: absolute;
+  height: 100%;
+  width: 30%;
+  opacity: 0.9;
+  color: black;
+  background-color: black;
+  z-index: 97;
+  right: 0;
+}
+
+.infobar_title{
+  position: relative;
+  font-size: 30px;
+  width: 100%;
+  top:12%;
+  color: black;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: center;
+}
+.infobar_data{
+  line-height: 27pt;
+  position: relative;
+  position: center;
+  top:30%;
+  font-size: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: white;
+  text-align: center;
+}
+.proxy{
+  position: relative;
+  font-size: 22px;
+  top:25%;
+  color:black;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: center;
+}
+.ui-widget-header,.ui-state-default, ui-button {
+            background:#C11212;
+            border: 0.5px solid #C11212;
+            color: #FFFFFF;
+            font-weight: bold;
+         }
+
+.national_info{
+  display: none;
+  position: absolute;
+  height: 100%;
+  width: 30%;
+  opacity: 0.9;
+  color: white;
+  background-color: black;
+  z-index: 97;
+  right: 0;
+}
+.national_title{
+  position: relative;
+  font-size: 30px;
+  width: 100%;
+  top:12%;
+  color: white;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: center;
+}
+.national_data{
+  line-height: 27pt;
+  position: relative;
+  position: center;
+  top:30%;
+  font-size: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: white;
+  text-align: center;
+}
+
+.titlebar{
+  position: absolute;
+  width: 100%;
+  height: 40px;
+  top: 0;
+  background-color: black;
+  z-index: 98;
+}
+.titlename{
+  position: relative;
+  font-size: 30px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: white;
+  text-align: center;
+  z-index: 99;
+}
+
+.buttonClass {
+  border: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: black;
+  background: white;
+  cursor: grab;
+  padding: 10px 20px;
+  margin: 15px 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.3s;
+}
+.livebutton{
+  position: relative;
+  margin-left: 0.5px;
+  top: 22.5px;
+  z-index: 99;
+  border: 0.75px;
+  font-family: inherit;
+  font-size: 10px;
+  color: black;
+  background: white;
+  cursor: grab;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 350;
+  transition: all 0.3s;
+}
+.recoveredbutton{
+  position: relative;
+  margin-left: 0.5px;
+  top: 22.5px;
+  z-index: 99;
+  border: 0.75px;
+  font-family: inherit;
+  font-size: 10px;
+  color: black;
+  background: white;
+  cursor: grab;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 350;
+  transition: all 0.3s;
+}
+
+.deceasedbutton{
+  position: relative;
+  margin-left: 0.5px;
+  top: 22.5px;
+  z-index: 99;
+  border: 0.75px;
+  font-family: inherit;
+  font-size: 10px;
+  color: black;
+  background: white;
+  cursor: grab;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 350;
+  transition: all 0.3s;
+}
+
+.marker {
+  background-image: url('covidlab.png');
+  background-size: cover;
+  width: 20px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.geocoder {
+  position: relative;
+  margin-left: 0.5px;
+  top: 45px;
+  left:0px;
+  z-index: 99;
+  width: 100%;
+}
+
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.mapboxgl-ctrl-geocoder {
+  min-width: 10%;
+  }
+.heatmapbutton{
+  position: relative;
+  margin-left: 0.5px;
+  top: 22.5px;
+  z-index: 99;
+  border: 0.75px;
+  font-family: inherit;
+  font-size: 10px;
+  color: black;
+  background: white;
+  cursor: grab;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 350;
+  transition: all 0.3s;
+}
+
+.allbutton{
+  position: relative;
+  margin-left: 0.5px;
+  top: 22.5px;
+  z-index: 99;
+  border: 0.75px;
+  font-family: inherit;
+  font-size: 10px;
+  color: black;
+  background: white;
+  cursor: grab;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 350;
+  transition: all 0.3s;
+}
+.buttonClass {
+  border: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: black;
+  background: white;
+  cursor: grab;
+  padding: 10px 20px;
+  margin: 15px 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.3s;
+}
+.labClass{
+  position: absolute;
+  top:0;
+  right:.5%;
+  z-index: 999;
+}
+.labButton{
+  border: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: black;
+  background: white;
+  cursor: grab;
+  padding: 5px 10px;
+  margin: 5px 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+  position: relative;
+  transition: all 0.3s;
+}
+</style>
+</head>
+
+<body>
+<div class="titlebar">
+<div class="titlename">COVID19: Cases Near You</div>
+</div>
+<div class="labClass"><button class="labButton" onclick="labsButton()">See Labs</button></div>
+<div class="national_info">
+  <div class="national_title">India Updates</div>
+  <div class="national_data">
+  <div >Total Cases Found: <span id="indtotal" style="color: #C11212;"></span></div>
+  <div >Active Cases: <span id="indactive" style="color: #C11212;"></span></div>
+  <div >Recoveries: <span id="indrecovery" style="color: #33cc33;"></span></div>
+  <div >Deaths: <span id="inddeaths" style="color: #C11212;"></span></div>
+  <button class="buttonClass" onclick="national_infoButton()">See Nearby Data!</button>
+</div>
+<div class="National_notice" style="color: #C11212;"><span id="desinotice"></span></div>
+</div>
+<div class="infobar">
+  <div class="infobar_title">Near You</div>
+  <div class="proxy"><span id="situation"></span></div>
+  <div class="infobar_data">
+  <div>Your Location: <span id="userplace"></span></div>
+  <div>Cases around You: <span id="ncases"></span></div>
+  <div>Risk of infection outdoor: <span id="riskoutdoor"></span></div>
+  <button class="buttonClass" onclick="infobarButton()">See National Stats!</button>
+</div>
+<div class="notice" style="color: black;"><span id="notice"></span></div>
+</div>
+<div id = "dialog-5" title = "Dialog Title!"> </div>
+<div class='quakeInfo'>
+  <div><strong>City:</strong> <span id='city'></span></div>
+  <div><strong>Cases Nearby:</strong> <span id='cNaerby'></span></div>  
+  <div><strong>State:</strong> <span id='state'></span></div>
+  <div><strong>Total Cases in the State:</strong> <span id='cState'></span></div>
+  <div><strong>Last Update:</strong> <span id='date'></span></div> 
+  <div id="geocoder" class="geocoder"></div>
+  
+</div>
+
+<div id='map' class="mapper" ></div>
+
+<script>
+mapboxgl.accessToken = "ACCESS_TOKEN";
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/dark-v10',
+
+center: [79.9864, 23.1815],
+zoom: 8
+});
+
+
+map.on('load', function() {
+map.addSource('earthquakes', {
+'type': 'geojson',
+'data': 'https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json'
+});
+map.addLayer({
+  'id': 'earthquakes-viz',
+  'type': 'circle',
+  'source': 'earthquakes',
+  'paint': {
+    'circle-radius': {
+    'base':2,
+    'stops': [[4, 5], [10, 50]]},
+    'circle-stroke-color': 'black',
+    'circle-stroke-width': 0.25,
+    'circle-color':'#B60606'}
+});
+
+
+var cnearbyDisplay = document.getElementById('cNaerby');
+var cstateDisplay = document.getElementById('cState');
+//var statusDisplay = document.getElementById('zone');
+var cityDisplay = document.getElementById('city');
+var stateDisplay = document.getElementById('state');
+var reportDisplay = document.getElementById('date');
+
+
+var quakeID = null;
+
+map.on('click', 'earthquakes-viz', (e) => {
+
+  map.getCanvas().style.cursor = 'pointer';
+  
+  var dist = e.features[0].properties.district;
+  var stat = e.features[0].properties.state;
+  var rprt = e.features[0].properties.updatedOn;
+  var nearB = "Total: "+e.features[0].properties.nearbycount+" Active: "+e.features[0].properties.totalActive+" Recoveries: "+e.features[0].properties.totalRecovered+" Deceased: "+e.features[0].properties.totalDeaths;
+  var staCo = e.features[0].properties.statecount;
+  var statu = e.features[0].properties.zone;
+  if (e.features.length > 0) {
+    cnearbyDisplay.textContent = nearB;
+    cstateDisplay.textContent = staCo;
+    //statusDisplay.textContent = statu;
+    cityDisplay.textContent = dist;
+    stateDisplay.textContent = stat;
+    reportDisplay.textContent = rprt;
+    if (quakeID) {
+      map.removeFeatureState({
+        source: "earthquakes",
+        id: quakeID
+      });
+    }
+
+    quakeID = e.features[0].id;
+    map.setFeatureState({
+      source: 'earthquakes',
+      id: quakeID,
+    }, {
+      hover: true
+    });
+
+  }
+});
+
+map.on("mouseleave", "earthquakes-viz", function() {
+  if (quakeID) {
+    map.setFeatureState({
+      source: 'earthquakes',
+      id: quakeID
+    }, {
+      hover: false
+    });
+  }
+
+  
+  quakeID = null;
+  cstateDisplay.textContent = 'Total cases in the state';
+  cnearbyDisplay.textContent = 'Cases around the selected city'
+  //statusDisplay.textContent = 'Red/Orange/Green';
+  cityDisplay.textContent = 'City/District';
+  stateDisplay.textContent = 'State';
+  reportDisplay.textContent = 'Last Update Date';
+  // Reset the cursor style
+  map.getCanvas().style.cursor = '';
+});
+
+
+});
+
+
+
+function infobarButton() {
+  document.getElementsByClassName("infobar")[0].style.display="none";
+  document.getElementsByClassName("national_info")[0].style.display="block";
+}
+function national_infoButton() {
+  document.getElementsByClassName("national_info")[0].style.display="none";
+  document.getElementsByClassName("infobar")[0].style.display="block";
+}
+
+function preprareinfobar(a,c,d,z){
+  try{
+    var userplaceDisplay = document.getElementById('userplace');
+    var casesitutationDisplay = document.getElementById('ncases');
+    var situationDisplay = document.getElementById('situation');
+    var risk = document.getElementById('riskoutdoor');
+    userplaceDisplay.textContent=a;
+    casesitutationDisplay.textContent=c;
+    if(z=="Green"){
+    situationDisplay.textContent="Low no. of cases in your proximity!";
+    risk.textContent="Low";
+    document.getElementsByClassName("infobar")[0].style.backgroundColor = "#33cc33";
+    document.getElementsByClassName("titlebar")[0].style.backgroundColor = "#33cc33";
+    }
+    else if(z=="Red"){
+    situationDisplay.textContent="High No of cases in your proximity!";
+    risk.textContent="High";
+    document.getElementsByClassName("infobar")[0].style.backgroundColor = "#C11212";
+    document.getElementsByClassName("titlebar")[0].style.backgroundColor = "#C11212";
+    document.getElementsByClassName("infobar_title")[0].style.color = "white";
+    document.getElementById("situation").style.color="white";
+    }
+    else{
+    situationDisplay.textContent="Few No of cases in your proximity!";
+    risk.textContent="Medium";
+    document.getElementsByClassName("infobar")[0].style.backgroundColor = "#C11212";
+    document.getElementsByClassName("titlebar")[0].style.backgroundColor = "#C11212";
+    document.getElementsByClassName("infobar_title")[0].style.color = "white";
+    document.getElementById("situation").style.color="white";
+    }
+    
+    document.getElementsByClassName("infobar")[0].style.display="block";
+  }
+  catch{
+    document.getElementsByClassName("infobar")[0].style.display="none";
+  }
+}
+function nationalData(a,b,c,d){
+  var totInd = document.getElementById('indtotal');
+  var actInd = document.getElementById('indactive');
+  var recoverInd = document.getElementById('indrecovery');
+  var deathsInd = document.getElementById('inddeaths');
+  totInd.textContent=a;
+  actInd.textContent=b;
+  recoverInd.textContent=c;
+  deathsInd.textContent=d;
+}
+
+function locationplotter(PT1){
+  function calc_dist(pt1){
+    var door;
+    var paas='';
+    var jila='';
+    var pradesh='';
+    var door1;
+    var paas1='';
+    var jila1='';
+    var pradesh1='';
+    var p1;
+    var p2;
+    var gaaon='';
+    var minD=99999999;
+    var minD1=99999999;
+    var minD2=99999999;
+    /*fetch(URL)
+     .then(response => response.json())
+     .then(json => {*/
+      var options = { units: 'kilometers' };
+      Json.features.forEach(function(q) {
+        try{
+          door=turf.distance(pt1, q, options);
+        }
+        catch{
+          door=99999999;
+        }
+        countrytotal=q.properties.totalIndia;
+        countryactive=q.properties.activeIndia;
+        countryrecover=q.properties.recoveryIndia;
+        countrydeaths=q.properties.deathsIndia;
+        Object.defineProperty(q.properties, 'distance', {
+        value: door,
+        writable: true,
+        enumerable: true,
+        configurable: true
+        });
+        if(door<=minD){
+        p1=pt1;
+        p2=q.geometry.coordinates;
+        casesaroundme=q.properties.nearbycount;
+        casesinmystate=q.properties.statecount;
+        minD=Math.round(door);
+        paas=q.properties.city;
+        jila=q.properties.district;
+        pradesh=q.properties.state;
+        haalat=q.properties.zone;
+        rprtDt=q.properties.reportedOn;
+      }
+     });
+      nationalData(countrytotal,countryactive,countryrecover,countrydeaths);
+      
+      if(minD<=200){
+          var titty = "Nearest Confirmed COVID19 Case!";
+          var nearest="City: "+String(paas)+" ("+String(minD)+" kms from you).";
+          var Jd = "District: "+String(jila);
+          var Sp = "State: "+String(pradesh);
+          var Dt = "Report Date: "+String(rprtDt);
+          //create_alerts(titty,nearest,Jd,Sp,Dt,'#C11212');
+          preprareinfobar(p1.properties.placename,casesaroundme,casesinmystate,haalat);
+          if(minD>=5){
+            flynearby(p1.geometry.coordinates,p2);
+          }
+        }
+    //});
+  }
+  calc_dist(PT1);
+}
+document.getElementsByClassName("national_info")[0].style.display="none";
+
+var userP;
+var Json;
+fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json")
+     .then(response => response.json())
+     .then(json => {
+      Json=json;
+      fetch("http://www.geoplugin.net/json.gp")
+      .then(response => response.json())
+      .then(json => {
+        var LAT = json.geoplugin_latitude;
+        var LON = json.geoplugin_longitude;
+        userP = String(json.geoplugin_city) +", "+ String(json.geoplugin_region);
+         var point1 = {
+          "type": "Feature",
+          "properties": {"type":"iplocation","placename":userP},
+          "geometry": {
+            "type": "Point",
+            "coordinates": [LON, LAT]
+          }
+      };
+      
+      locationplotter(point1);
+      map.flyTo({
+      center:point1.geometry.coordinates,
+      zoom:8,
+      essential: true
+      });
+      });
+    });
+
+var geolocate = new mapboxgl.GeolocateControl();
+
+map.addControl(geolocate,'bottom-left');
+
+/*geolocate.on('geolocate', function(e) {
+      var lon = e.coords.longitude;
+      var lat = e.coords.latitude
+      var position = [lon, lat];
+      var poit1 = {
+          "type": "Feature",
+          "properties": {"type":"geolocation"},
+          "geometry": {
+            "type": "Point",
+            "coordinates": position
+          }
+      };
+      locationplotter(poit1);
+});*/
+
+function flynearby(p1,p2){
+  var origin = [parseInt(p1[0]),parseInt(p1[1])];
+  var destination = p2;
+  var route = {
+  'type': 'FeatureCollection',
+  'features': [
+  {
+  'type': 'Feature',
+  'geometry': {
+  'type': 'LineString',
+  'coordinates': [origin, destination]
+  }
+  }
+  ]
+  };
+  var point = {
+  'type': 'FeatureCollection',
+  'features': [
+  {
+  'type': 'Feature',
+  'properties': {},
+  'geometry': {
+  'type': 'Point',
+  'coordinates': origin
+  }
+  }
+  ]
+  };
+
+  var OPS = { units: 'kilometers' };
+  var lineDistance = turf.lineDistance(route.features[0], OPS);
+   
+  var arc = [];
+  var steps = 500;
+  for (var i = 0; i < lineDistance; i += lineDistance / steps) {
+  var segment = turf.along(route.features[0], i, OPS);
+  arc.push(segment.geometry.coordinates);
+  }
+  route.features[0].geometry.coordinates = arc;
+   
+  // Used to increment the value of the point measurement against the route.
+  var counter = 0;
+   
+  map.on('load', function() {
+  // Add a source and layer displaying a point which will be animated in a circle.
+  map.addSource('route', {
+  'type': 'geojson',
+  'data': route
+  });
+ 
+  map.addSource('point', {
+  'type': 'geojson',
+  'data': point
+  });
+   
+  map.addLayer({
+  'id': 'route',
+  'source': 'route',
+  'type': 'line',
+  'paint': {
+  'line-width': 2,
+  'line-color': '#C11212'
+  }
+  });
+ 
+  map.addLayer({
+  'id': 'point',
+  'source': 'point',
+  'type': 'symbol',
+  'layout': {
+  'icon-image': 'airport-15',
+  'icon-rotate': ['get', 'bearing'],
+  'icon-rotation-alignment': 'map',
+  'icon-allow-overlap': true,
+  'icon-ignore-placement': true
+  }
+  });
+  });
+  }
+
+var geocoder = new MapboxGeocoder({
+accessToken: mapboxgl.accessToken,
+mapboxgl: mapboxgl
+});
+document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+geocoder.on('result', function(ev) {
+  var searchResult = ev.result.geometry;
+  let userloc = {
+    "type": "Feature",
+    "properties": {"type":"keboard_input", "placename":ev.result.place_name},
+    "geometry": {
+      "type": "Point",
+      "coordinates": [String(searchResult.coordinates[0]),String(searchResult.coordinates[1])]
+    }
+  };
+  map.flyTo({
+  center:userloc.geometry.coordinates,
+  zoom:8,
+  essential: true
+  });
+  
+  var marker = new mapboxgl.Marker()
+  .setLngLat(userloc.geometry.coordinates)
+  .addTo(map);
+
+   function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+   }
+
+  sleep(10000).then(() => {
+  marker.remove();
+  })
+
+  locationplotter(userloc);
+});
+
+var decider=1;
+var labmarkers=[]
+function labsButton(){
+var gJson;
+fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-govtlabs.json")
+     .then(response => response.json())
+     .then(json => {
+      gJson=json;
+      if(decider==1){
+        decider=decider*(-1);
+      gJson.features.forEach(function(marker) {
+
+    // create a HTML element for each feature
+    var el = document.createElement('div');
+    el.className = 'marker';
+
+  new mapboxgl.Marker(el)
+  .setLngLat(marker.geometry.coordinates)
+  .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
+    .setHTML('<h3> Govt lab </h3><p>' + marker.properties.lab+", "+ marker.properties.city+", "+marker.properties.state+ '</p>'))
+  .addTo(map);
+  labmarkers.push(marker);
+  });
+ }
+ else{
+  labmarkers.forEach((marker) => marker.remove());
+ }
+});
+}
+
+</script>
+</body>
+
+</html>
