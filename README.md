@@ -11,7 +11,7 @@ the newer version code is also made public, with removing the confidential crede
 
 ## Mentions and thanking notes
 
-We are thankful to **Mapbox** team who allowed us to use their apu for free for 6 months, also a big thanks to **https://covid19india.org** for keeping their APIs public, otherwise scarping data from the web would have been a hectic and time taking task.
+We are thankful to **Mapbox** team who allowed us to use their javascript API free of cost for 6 months, also a big thanks to **https://covid19india.org** for keeping their APIs public, otherwise scarping data from the web would have been a hectic and time taking task.
 
 ### Live project links:
 
