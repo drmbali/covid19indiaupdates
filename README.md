@@ -19,3 +19,4 @@ link with geolocation fetching feature: https://grv.codes/coronavirus
 link without geolocation fetching feature: http://projects.shevya.codes/coronavirus
 
 ![demo-version1](https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/corona.gif)
+[](https://raw.githubusercontent.com/kgrv/covid19indiaupdates/master/site%20demo-2.gif)
