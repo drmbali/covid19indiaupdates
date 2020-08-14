@@ -21,7 +21,7 @@ from flask import Flask,jsonify
 def zoneData():
     #https://api.covid19india.org/zones.json
     zonesPanda=pd.DataFrame()
-    latLong=pd.read_excel('latlonginMainupd.xlsx')
+    latLong=pd.read_excel('input/latlonginMainupd.xlsx')
     damnationZones=requests.get("https://api.covid19india.org/zones.json")
     districtzones=damnationZones.json()
     zonesD=districtzones.get('zones')
@@ -122,7 +122,7 @@ def matcher_detailed(pdat_i,pdats_i,latLong,district=True):
         return 0
 
 def mainer(newflag):
-    latLong=pd.read_excel('latlonginMainupd.xlsx')
+    latLong=pd.read_excel('input/latlonginMainupd.xlsx')
     #print(datetime.datetime.now())
    
     india_totalCases = 0
@@ -133,7 +133,7 @@ def mainer(newflag):
     if(newflag==True):
         zonesPanda=zoneData()
     else:
-        zonesPanda=pd.read_excel('zones.xlsx')
+        zonesPanda=pd.read_excel('input/zones.xlsx')
     daataa=[]
     stateCounter={}
     damnation=requests.get("https://api.covid19india.org/state_district_wise.json")
@@ -161,8 +161,6 @@ def mainer(newflag):
             disDeaths=districtupdateddata.get(key).get('districtData').get(k).get("deceased")
             disDelta=districtupdateddata.get(key).get('districtData').get(k).get("delta")
             coor,zone=matcher_final(k.lower(),key.lower(),zonesPanda)
-            #if(key=="West Bengal"):
-                #print(k,": ",key)
             if(coor):
                 x=jsonWriter(k,key,disConfirmed,disActive,disRecovered,disDeaths,coor,zone,stateCounter,india_totalCases,india_activecases,india_recovered,india_deaths)
                 if(x):
@@ -205,21 +203,8 @@ def updates():
     return(covid19data())
 
 
-# In[17]:
-
-
 if __name__=="__main__":
     app.run()
-
-
-# In[7]:
-
-
-
-
-
-# In[ ]:
-
 
 
 
