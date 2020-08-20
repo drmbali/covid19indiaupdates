@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>coviRouter Beta:find cases on your route</title>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.2.0/mapbox-gl-geocoder.min.js'></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.2.0/mapbox-gl-geocoder.css' type='text/css' />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+      .titlebar{
+      position: absolute;
+      width: 100%;
+      height: 40px;
+      top: 0;
+      background-color: #C11212;
+      z-index: 98;
+    }
+    .titlename{
+      position: relative;
+      font-size: 30px;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      color: white;
+      text-align: center;
+      z-index: 99;
+    }
+    .national_info{
+      display: none;
+      position: absolute;
+      height: 100%;
+      width: 30%;
+      opacity: 0.9;
+      color: white;
+      background-color: black;
+      z-index: 97;
+      right: 0;
+    }
+    .national_title{
+      position: relative;
+      font-size: 30px;
+      width: 100%;
+      top:12%;
+      color: white;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      text-align: center;
+    }
+    .national_data{
+      line-height: 27pt;
+      position: relative;
+      position: center;
+      top:30%;
+      font-size: 20px;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
+      .mapboxgl-popup {
+        max-width: 600px;
+        color: black;
+        height: 200px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      }
+      .popupAlt{
+        background-color: none;
+
+      }
+      .geocoder1 {
+          position: absolute;
+          margin-left: 0.5px;
+          top: 45px;
+          left:0px;
+          z-index: 99;
+          width: 100%;
+        }
+        .geocoder2 {
+          position: absolute;
+          margin-left: 0.5px;
+          top: 45px;
+          left:120px;
+          z-index: 99;
+          width: 100%;
+        }
+        .searcher{
+          position: absolute;
+          z-index: 99;
+          background-color: none;
+          top:33px;
+          width: 350px;
+        }
+        .searchbutt{
+          z-index: 99;
+          position: relative;
+          font-size: 12px;
+          top:65px;
+          left: 1%;
+          width: 100px;
+          background-color:white;
+        }
+      .mapboxgl-ctrl-geocoder {
+          min-width: 10%;
+          }
+
+        .trackerReturn{
+        position: absolute;
+        top:0;
+        right:.5%;
+        z-index: 999;
+      }
+      .retBut{
+        border: none;
+        font-family: inherit;
+        font-size: 15px;
+        color: black;
+        background: white;
+        cursor: grab;
+        padding: 5px 10px;
+        margin: 5px 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 500;
+        position: relative;
+        transition: all 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="titlebar">
+    <div class="titlename">coviRouter: Find Route with Least Cases</div>
+    </div>
+    <div class="trackerReturn"><a href="https://grv.codes/coronavirus"><button class="retBut">back to tracker</button></a></div>
+    <div class="national_info" style="background: #C11212">
+    <div class="national_title">Route Details</div>
+    <div class="national_data">
+    <div ><strong>Route:</strong> </div><span id="routefinal" style="font-size: 11px; color: white; text-align: center;"></span>
+    </div>
+    </div>
+
+    <div class="searcher">
+    <div id="geocoderfrom" class="geocoder1"></div>
+    <div id="geocoderto" class="geocoder2"></div>
+    </div>
+    <div id='map'></div>
+    <script>
+        
+        mapboxgl.accessToken = 'pk.eyJ1Ijoiam9obndpY2syMjkiLCJhIjoiY2s4c255NWFvMDBlazNwbWhnbzF2Mml1dCJ9.Q_q8clRd6qI6bRE2pccx1A';
+        var map = new mapboxgl.Map({
+          container: 'map',
+          style: 'mapbox://styles/mapbox/dark-v10',
+          center: [77.1025, 45.523751], // starting position
+          zoom: 12
+        });
+        var start = [];
+        var end=[];
+        var Json;
+        fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json")
+             .then(response => response.json())
+             .then(json => {
+              Json=json;
+          });
+        function cal_distance(p){
+              minD=9999999;
+              var door;
+              var district="";
+              var cases;
+              var coord;
+              Json.features.forEach(function(q){
+                //console.log(q);
+                   try{
+                    door=turf.distance(p, q);
+                  }
+                  catch{
+                    door=99999999;
+                  }
+                  if(door<minD){
+                      minD=door;
+                      district=q.properties.district;
+                      cases=q.properties.nearbycount;
+                      coord=q.geometry.coordinates;
+                  }
+              });
+              //console.log(district,cases);
+              return [district,cases,coord];
+          }
+        var distr1=[],
+        caser1=[],
+        coor1=[],
+        enroute1='',
+        totalcases1=0;
+        var distr=[],
+        caser=[],
+        coor=[],
+        enroute='',
+        totalcases=0;
+        var distr2=[],
+        caser2=[],
+        coor2=[],
+        enroute2='',
+        totalcases2=0;
+        map.on('load', function() {
+        var geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl
+        });
+        
+        document.getElementById('geocoderfrom').appendChild(geocoder.onAdd(map));
+        geocoder.on('result', function(ev) {
+          var searchResult = ev.result.geometry;
+          start=[String(searchResult.coordinates[0]),String(searchResult.coordinates[1])];
+        });
+        var geocoder1 = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl
+        });
+        document.getElementById('geocoderto').appendChild(geocoder1.onAdd(map));
+        geocoder1.on('result', function(ev) {
+          var searchResult = ev.result.geometry;
+          end=[String(searchResult.coordinates[0]),String(searchResult.coordinates[1])];
+          if(start.length!=0 && end.length!=0){
+            //console.log(start,end);
+        fetch('https://api.mapbox.com/directions/v5/mapbox/driving-traffic/'+start[0]+','+start[1]+';'+end[0]+','+end[1]+'?geometries=geojson&access_token='+mapboxgl.accessToken)
+        .then(response => response.json())
+        .then(json=>{
+                fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json")
+                 .then(response => response.json())
+                 .then(json => {
+                  Json=json;
+              });
+            distr=[],
+            caser=[],
+            coor=[],
+            enroute='',
+            totalcases=0;
+            var inplace=json.routes[0].geometry.coordinates;
+            for(i=0;i<inplace.length;i++){
+                var res=cal_distance(inplace[i]);
+                if(distr.indexOf(String(res[0]))==-1){
+                    distr.push(res[0]);
+                    caser.push(res[1]);
+                    coor.push(res[2]);
+                    enroute=enroute+res[0]+'->';
+                    totalcases=totalcases+res[1];
+                }
+            };
+           //console.log(coor);
+           createRoute('route','route',coor,'red',8,enroute,totalcases);
+         });
+
+
+        fetch('https://api.mapbox.com/directions/v5/mapbox/driving/'+start[0]+','+start[1]+';'+end[0]+','+end[1]+'?geometries=geojson&access_token='+mapboxgl.accessToken)
+        .then(response => response.json())
+        .then(json=>{
+                fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json")
+                 .then(response => response.json())
+                 .then(json => {
+                  Json=json;
+              });
+            distr1=[],
+            caser1=[],
+            coor1=[],
+            enroute1='',
+            totalcases1=0;
+            var inplace1=json.routes[0].geometry.coordinates;
+            for(i=0;i<inplace1.length;i++){
+                var res1=cal_distance(inplace1[i]);
+                if(distr1.indexOf(String(res1[0]))==-1){
+                    distr1.push(res1[0]);
+                    enroute1=enroute1+res1[0]+'->';
+                    totalcases1=totalcases1+res1[1];
+                    caser1.push(res1[1]);
+                    coor1.push(res1[2]);
+                }
+            }
+
+            createRoute('route1','route1',coor1,'white',6,enroute1,totalcases1);
+        });
+
+        /*fetch('https://api.mapbox.com/directions/v5/mapbox/cycling/'+start[0]+','+start[1]+';'+end[0]+','+end[1]+'?geometries=geojson&access_token='+mapboxgl.accessToken)
+        .then(response => response.json())
+        .then(json=>{
+                fetch("https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/covid19-geojsonALT.json")
+                 .then(response => response.json())
+                 .then(json1 => {
+                  Json=json1;
+              });
+            distr2=[],
+            caser2=[],
+            coor2=[],
+            enroute2='',
+            totalcases2=0;
+            //console.log(json)
+            var inplace2=json.routes[0].geometry.coordinates;
+            for(i=0;i<inplace2.length;i++){
+                var res2=cal_distance(inplace2[i]);
+                if(distr.indexOf(String(res2[0]))==-1){
+                    distr2.push(res2[0]);
+                    caser2.push(res2[1]);
+                    coor2.push(res2[2]);
+                    enroute2=enroute+res2[0]+'->';
+                    totalcases2=totalcases2+res2[1];
+                }
+            };
+           createRoute('route2','route2',coor2,'blue',8,enroute2,totalcases2);
+         });*/
+
+      }
+    });
+});
+function createRoute(sourcename,layerid,coor,col,wid,cities,totalC){
+  if (map.getLayer(layerid)){
+    map.removeLayer(layerid);
+    map.removeSource(sourcename);
+  };
+  
+map.addSource(sourcename, {
+            'type': 'geojson',
+            'data': {
+            'type': 'Feature',
+            'properties': {
+                'route':cities,
+                'totalCases':totalC
+            },
+            'geometry': {
+            'type': 'LineString',
+            'coordinates': coor
+            }
+            }
+            });
+            map.addLayer({
+            'id': layerid,
+            'type': 'line',
+            'source': sourcename,
+            'layout': {
+            'line-join': 'round',
+            'line-cap': 'round'
+            },
+            'paint': {
+            'line-color': col,
+            'line-width': wid
+            }
+            });
+        }
+
+    var popup = new mapboxgl.Popup({
+    className:"popupAlt",
+    closeButton: false,
+    closeOnClick: false
+    });
+     
+
+    function route_infoButton(a){
+      //console.log(a);
+    try{
+      var routerFinal = document.getElementById('routefinal');
+      routerFinal.textContent=a;
+      document.getElementsByClassName("national_info")[0].style.display="block";
+    }
+    catch{
+      document.getElementsByClassName("national_info")[0].style.display="none";
+      console.log('we are in the catch')
+    }
+  }
+     
+
+     map.on('mouseenter', 'route1', function(e) {
+            route_infoButton(e.features[0].properties.route);
+            popup
+            .setLngLat(e.lngLat)
+            .setHTML("<h2> Total cases on this route: "+e.features[0].properties.totalCases+"</h2>")
+            .addTo(map);
+         
+         });
+    
+     
+    map.on('mouseleave', 'route1', function() {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+    //document.getElementsByClassName("national_info")[0].style.display="block";
+    });
+
+    map.on('mouseenter', 'route', function(e) {
+            //console.log(e.features[0].properties.route);
+            route_infoButton(e.features[0].properties.route);
+            popup
+            .setLngLat(e.lngLat)
+            .setHTML("<h2> Total cases on this route: "+e.features[0].properties.totalCases+"</h2>")
+            .addTo(map);
+         
+         });
+    
+     
+    map.on('mouseleave', 'route', function() {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+    //document.getElementsByClassName("national_info")[0].style.display="block";
+    });
+
+    map.on('mouseenter', 'route2', function(e) {
+            //console.log(e.features[0].properties.route);
+            route_infoButton(e.features[0].properties.route);
+            popup
+            .setLngLat(e.lngLat)
+            .setHTML("<h2> Total cases on this route: "+e.features[0].properties.totalCases+"</h2>")
+            .addTo(map);
+         
+         });
+    
+     
+    map.on('mouseleave', 'route2', function() {
+    map.getCanvas().style.cursor = '';
+    popup.remove();
+    //document.getElementsByClassName("national_info")[0].style.display="block";
+    });
+
+    </script>
+  </body>
+</html>
