@@ -15,7 +15,7 @@ We are thankful to **Mapbox** team who allowed us to use their javascript API fr
 
 ### Live project links:
 
-link with geolocation fetching feature: https://grv.codes/coronavirus
+link with geolocation fetching feature: https://kgrv.tech/coronavirus
 link without geolocation fetching feature: http://projects.shevya.codes/coronavirus
 
 ![demo-version1](https://dl-model-bucket-101.s3.us-east-1.amazonaws.com/corona.gif)
